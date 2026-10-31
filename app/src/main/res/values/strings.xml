@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Lanceur</string>
+    <string name="app_name">OmniLauncher</string>
     <!-- Textes affichés par Android dans Paramètres > Accessibilité (ressources obligatoires) -->
-    <string name="lock_service_label">Lanceur : double toucher pour verrouiller</string>
-    <string name="lock_service_description">Permet à Lanceur de mettre l\'écran en veille quand tu touches deux fois une zone vide de l\'accueil. Lanceur ne lit rien de ce qui s\'affiche et ne fait rien d\'autre.</string>
-    <string name="media_listener_label">Lanceur — lecteurs et concentration</string>
+    <string name="lock_service_label">OmniLauncher : double toucher pour verrouiller</string>
+    <string name="lock_service_description">Permet à OmniLauncher de mettre l\'écran en veille quand tu touches deux fois une zone vide de l\'accueil. OmniLauncher ne lit rien de ce qui s\'affiche et ne fait rien d\'autre.</string>
+    <string name="media_listener_label">OmniLauncher — lecteurs et concentration</string>
 </resources>

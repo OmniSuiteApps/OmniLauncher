@@ -170,7 +170,7 @@ fun SettingsScreen(
                         .padding(horizontal = 18.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(tr("Lanceur n'est pas ton écran d'accueil", "Lanceur is not your home app"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                    Text(tr("OmniLauncher n'est pas ton écran d'accueil", "OmniLauncher is not your home app"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                     Button(onClick = actions.setDefault) { Text(tr("Définir", "Set")) }
                 }
             }

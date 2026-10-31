@@ -84,7 +84,7 @@ fun NowPlayingCard(
         ) {
             if (size != WidgetSize.SMALL) {
                 Text(
-                    tr("Pour voir et piloter tes lecteurs, Lanceur a besoin de l'accès aux notifications. Il ne les lit pas.", "To see and control your players, Lanceur needs notification access. It doesn't read them."),
+                    tr("Pour voir et piloter tes lecteurs, OmniLauncher a besoin de l'accès aux notifications. Il ne les lit pas.", "To see and control your players, OmniLauncher needs notification access. It doesn't read them."),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

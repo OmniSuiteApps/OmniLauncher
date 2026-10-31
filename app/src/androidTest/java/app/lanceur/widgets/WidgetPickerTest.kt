@@ -42,7 +42,7 @@ class WidgetPickerTest {
     fun builtin_widgets_show_their_own_starting_size() {
         // Les 5 premiers tiennent à l'écran (la liste ne compose que les lignes visibles)
         val lanceur = app.lanceur.builtin.BuiltinSlots.pickerEntries().take(5)
-        val groups = listOf(PickerGroup("Lanceur", "app.lanceur.builtin", isWork = false, entries = lanceur))
+        val groups = listOf(PickerGroup("OmniLauncher", "app.lanceur.builtin", isWork = false, entries = lanceur))
         rule.setContent { MaterialTheme { WidgetPicker(groups, "", {}, preview = {}, onPick = {}) } }
         rule.onAllNodesWithText("Taille de départ : M").assertCountEquals(3)
         rule.onAllNodesWithText("Taille de départ : S").assertCountEquals(2)

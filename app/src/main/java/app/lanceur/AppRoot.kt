@@ -184,7 +184,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
     }
     var pendingRestore by remember { mutableStateOf<app.lanceur.prefs.BackupFile?>(null) }
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { scope.launch { container.backups.read(it)?.let { b -> pendingRestore = b } ?: quickToast(tr("Ce n'est pas une sauvegarde de Lanceur", "This is not a Lanceur backup")) } }
+        uri?.let { scope.launch { container.backups.read(it)?.let { b -> pendingRestore = b } ?: quickToast(tr("Ce n'est pas une sauvegarde d'OmniLauncher", "This is not an OmniLauncher backup")) } }
     }
     val folderLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         uri?.let {
@@ -218,7 +218,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
     val widgetLabels = remember(prefs.widgets, widgetRefresh) {
         prefs.widgets.associate { slot ->
             slot.appWidgetId to when {
-                BuiltinSlots.isBuiltin(slot) -> BuiltinSlots.kindOf(slot)?.label ?: tr("Widget Lanceur", "Lanceur widget")
+                BuiltinSlots.isBuiltin(slot) -> BuiltinSlots.kindOf(slot)?.label ?: tr("Widget OmniLauncher", "OmniLauncher widget")
                 else -> container.widgetHost.label(slot.appWidgetId)
             }
         }
@@ -276,7 +276,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
         // Activé mais pas encore relancé par Android (quelques secondes après une mise à jour) : on n'envoie pas
         // l'utilisateur dans les réglages pour rien
         if (!LockScreenService.lock() && !LockScreenService.isEnabled(context)) {
-            toast(tr("Active « Lanceur » dans Accessibilité pour verrouiller d'un double toucher", "Turn on “Lanceur” in Accessibility to lock with a double tap"))
+            toast(tr("Active « OmniLauncher » dans Accessibilité pour verrouiller d'un double toucher", "Turn on “OmniLauncher” in Accessibility to lock with a double tap"))
             openAccessibilitySettings()
         }
     }

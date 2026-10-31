@@ -49,7 +49,7 @@ class PickerCatalogTest {
     @Test
     fun lanceur_group_comes_first_in_enum_order() {
         val groups = PickerCatalog.build(all, emptySet(), "", app.lanceur.builtin.BuiltinSlots.pickerEntries())
-        assertEquals(listOf("Lanceur", "Agenda", "Éditions", "Météo"), groups.map { it.appLabel })
+        assertEquals(listOf("OmniLauncher", "Agenda", "Éditions", "Météo"), groups.map { it.appLabel })
         assertEquals(
             app.lanceur.builtin.BuiltinKind.entries.map { it.label },
             groups.first().entries.map { it.widgetLabel },
@@ -59,7 +59,7 @@ class PickerCatalogTest {
     @Test
     fun lanceur_widgets_follow_the_filter() {
         val groups = PickerCatalog.build(all, emptySet(), "batterie", app.lanceur.builtin.BuiltinSlots.pickerEntries())
-        assertEquals(listOf("Lanceur"), groups.map { it.appLabel })
+        assertEquals(listOf("OmniLauncher"), groups.map { it.appLabel })
         assertEquals(2, groups.single().entries.size)
     }
 }

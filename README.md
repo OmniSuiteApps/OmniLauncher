@@ -1,4 +1,4 @@
-# Lanceur
+# OmniLauncher
 
 Launcher Android personnel pour Pixel 9 : favoris en liste, alphabet animé, recherche universelle
 (applis, web, agenda, contacts, réglages, calcul, conversions) et dossier caché protégé par l'empreinte, avec l'Espace privé.
@@ -15,7 +15,7 @@ JAVA_HOME=/opt/android-studio/jbr ./gradlew :app:assembleRelease
 ```
 
 `install -r` met à jour l'app en gardant favoris, applis cachées et rôle d'écran d'accueil.
-Au premier essai : *Paramètres > Applis > Applis par défaut > Appli d'écran d'accueil > Lanceur*.
+Au premier essai : *Paramètres > Applis > Applis par défaut > Appli d'écran d'accueil > OmniLauncher*.
 
 ### Clé de signature
 
@@ -26,7 +26,7 @@ Au premier essai : *Paramètres > Applis > Applis par défaut > Appli d'écran d
 
 ### Version debug
 
-La version de test est une app distincte, `app.lanceur.debug`, nommée « Lanceur (test) ». Les tests d'interface
+La version de test est une app distincte, `app.lanceur.debug`, nommée « OmniLauncher (test) ». Les tests d'interface
 l'installent puis la désinstallent à la fin ; elle ne touche jamais à la release signée (`app.lanceur`), la seule à
 utiliser au quotidien. Après des tests, mettre à jour la release avec `adb install -r` (les réglages sont conservés).
 
@@ -89,30 +89,30 @@ permet aussi de réordonner ses applis avec la poignée ☰. Supprimer un dossie
 ## Double toucher pour verrouiller
 
 Android ne laisse une appli mettre l'écran en veille, sans bloquer ensuite l'empreinte, que par un service
-d'accessibilité. Celui de Lanceur ne reçoit aucun événement et ne lit rien à l'écran.
+d'accessibilité. Celui d'OmniLauncher ne reçoit aucun événement et ne lit rien à l'écran.
 
-1. *Paramètres > Accessibilité > Lanceur : double toucher pour verrouiller* → activer (ou *Réglages* de Lanceur > *Activer*).
+1. *Paramètres > Accessibilité > OmniLauncher : double toucher pour verrouiller* → activer (ou *Réglages* d'OmniLauncher > *Activer*).
 2. Si l'option est grisée (« Paramètre restreint », fréquent pour une appli installée hors Play Store) :
-   *Paramètres > Applis > Lanceur > ⋮ > Autoriser les paramètres restreints*, puis recommencer l'étape 1.
+   *Paramètres > Applis > OmniLauncher > ⋮ > Autoriser les paramètres restreints*, puis recommencer l'étape 1.
 
 ## Page de widgets
 
 À gauche de l'accueil : le résumé du jour (prochains événements, alarme suivante), puis tes widgets en pleine largeur.
-*+ Ajouter un widget* ouvre le sélecteur ; la première fois, Android demande d'autoriser Lanceur à créer des widgets.
+*+ Ajouter un widget* ouvre le sélecteur ; la première fois, Android demande d'autoriser OmniLauncher à créer des widgets.
 *Modifier* permet de les déplacer (poignée), de choisir leur hauteur (S, M, L), de les reconfigurer ou de les retirer.
 Les widgets d'une appli cachée ou de l'Espace privé ne sont jamais proposés ni affichés.
 
 ### Widgets intégrés
 
-Le sélecteur propose en tête un groupe « Lanceur » : Lecture en cours, Agenda · mois, Agenda · semaine,
+Le sélecteur propose en tête un groupe « OmniLauncher » : Lecture en cours, Agenda · mois, Agenda · semaine,
 Batterie · anneau, Batterie · barre, Note rapide, To-do, Compte à rebours, Horloges du monde,
 Minuteur / chrono, Contacts favoris, Raccourcis rapides, Stockage et mémoire, Météo et Flux RSS. Ils s'ajoutent sans
 autorisation et se déplacent, se redimensionnent et se retirent comme les autres.
 
 - **Note rapide / To-do** : on écrit directement sur la carte ; chaque widget a son propre contenu, gardé dans les
-  réglages de Lanceur (jamais envoyé ailleurs) et effacé quand on retire le widget.
+  réglages d'OmniLauncher (jamais envoyé ailleurs) et effacé quand on retire le widget.
 - **Compte à rebours / Horloges du monde** : une feuille de réglages s'ouvre à l'ajout ; ⚙ en mode Modifier la rouvre.
-- **Minuteur** : les pastilles lancent un minuteur de l'Horloge, qui sonne même Lanceur fermé.
+- **Minuteur** : les pastilles lancent un minuteur de l'Horloge, qui sonne même OmniLauncher fermé.
 - **Contacts favoris** : ceux marqués d'une étoile dans Contacts ; toucher appelle, appui long envoie un SMS.
 - **Raccourcis** : la lampe s'allume depuis le widget ; Internet, Bluetooth, Son et Ne pas déranger ouvrent le
   panneau d'Android (une appli ne peut pas les changer elle-même).
@@ -121,8 +121,8 @@ autorisation et se déplacent, se redimensionnent et se retirent comme les autre
   arrière-plan. La météo (Open-Meteo, sans compte) ne reçoit que des coordonnées arrondies au kilomètre ; la position
   approximative n'est demandée que si tu choisis « Ma position ». Sans réseau, les dernières données restent affichées.
 
-- **Lecture en cours** : la première fois, toucher « Autoriser l'accès aux lecteurs » et activer Lanceur dans
-  l'accès aux notifications (Lanceur ne lit aucune notification). Si l'option est grisée : Infos de l'appli ›
+- **Lecture en cours** : la première fois, toucher « Autoriser l'accès aux lecteurs » et activer OmniLauncher dans
+  l'accès aux notifications (OmniLauncher ne lit aucune notification). Si l'option est grisée : Infos de l'appli ›
   ⋮ › Autoriser les paramètres restreints, comme pour le double toucher.
 - **Agendas** : utilisent la même autorisation que le résumé du jour ; glisser sur le mois change de mois.
 - **Batterie** : aucune autorisation ; le niveau des accessoires Bluetooth n'est pas disponible pour les applis.
@@ -130,7 +130,7 @@ autorisation et se déplacent, se redimensionnent et se retirent comme les autre
 ## Pages et Actualités
 
 Réglages › Pages : active ou désactive Actualités et Widgets, et choisis leur ordre de gauche à droite avec ↑ / ↓
-(l'Accueil reste toujours là). Lanceur démarre sur l'Accueil ; le bouton Accueil et le geste Retour y ramènent.
+(l'Accueil reste toujours là). OmniLauncher démarre sur l'Accueil ; le bouton Accueil et le geste Retour y ramènent.
 
 La page **Actualités** rassemble tes flux RSS/Atom : bulles en haut pour filtrer (« Tout » ou un flux), « + » pour en
 ajouter, appui long pour en retirer, puis les articles du plus récent au plus ancien, avec l'image fournie par le flux.

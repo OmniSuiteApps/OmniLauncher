@@ -31,6 +31,6 @@ object BuiltinSlots {
 
     /** Entrées du groupe « Lanceur » du sélecteur, dans l'ordre de `BuiltinKind`. */
     fun pickerEntries(): List<ProviderEntry> = BuiltinKind.entries.map { kind ->
-        ProviderEntry(provider(kind), ProfileKind.MAIN, "Lanceur", kind.label, kind.heightDp(kind.defaultSize))
+        ProviderEntry(provider(kind), ProfileKind.MAIN, "OmniLauncher", kind.label, kind.heightDp(kind.defaultSize))
     }
 }
