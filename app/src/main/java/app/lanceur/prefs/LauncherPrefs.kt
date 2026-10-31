@@ -26,7 +26,6 @@ data class LauncherPrefs(
     val appLabelStyle: app.lanceur.ui.AppLabelStyle = app.lanceur.ui.AppLabelStyle(),
     val focus: app.lanceur.focus.FocusMode = app.lanceur.focus.FocusMode(),
     val backup: BackupSettings = BackupSettings(),
-    val updates: UpdateSettings = UpdateSettings(),
     /** Dossiers, dans l'ordre d'affichage en haut de l'alphabet. */
     val folders: List<app.lanceur.folders.Folder> = emptyList(),
     /** Noms choisis par l'utilisateur, à la place de ceux des applis. */

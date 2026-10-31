@@ -13,7 +13,6 @@ import app.lanceur.builtin.storage.StorageSource
 import app.lanceur.builtin.weather.WeatherSource
 import app.lanceur.net.Network
 import app.lanceur.backup.BackupStore
-import app.lanceur.update.UpdateChecker
 import app.lanceur.news.ImageLoader
 import app.lanceur.news.NewsSource
 import app.lanceur.search.AppSearchProvider
@@ -80,7 +79,6 @@ class AppContainer(context: Context) {
     val news = NewsSource(network)
     val images = ImageLoader(appContext, network)
     val backups = BackupStore(appContext, prefsRepo)
-    val updates = UpdateChecker(appContext, network, prefsRepo)
     val battery = BatterySource(appContext)
     val nowPlaying = NowPlayingSource(appContext)
     val calendarRange = CalendarRangeSource(appContext)

@@ -289,4 +289,12 @@ class PrefsRepoTest {
         assertFalse(PrefsRepo(broken).restore(mapOf("badges" to false)))
         assertTrue(PrefsRepo(store()).restore(mapOf("badges" to false)))
     }
+    @Test
+    fun old_update_settings_are_erased_on_the_next_write() = runTest {
+        val store = store()
+        store.edit { it[stringPreferencesKey("update_latest")] = "1.7.0" }
+        val repo = PrefsRepo(store)
+        repo.setBadges(false)
+        assertTrue(repo.snapshot().keys.none { it.startsWith("update_") })
+    }
 }

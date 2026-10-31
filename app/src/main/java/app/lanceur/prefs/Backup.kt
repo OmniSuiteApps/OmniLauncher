@@ -5,16 +5,6 @@ import java.time.format.DateTimeFormatter
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Mises à jour : propre à ce téléphone, ni sauvegardé ni restauré. */
-data class UpdateSettings(
-    val enabled: Boolean = true,
-    val lastCheck: Long? = null,
-    val latest: String? = null,
-    val notified: String? = null,
-    /** Télécharger et installer seul la nouvelle version. */
-    val autoInstall: Boolean = true,
-)
-
 /** Réglages de la sauvegarde elle-même : jamais sauvegardés ni restaurés (sinon on écraserait le dossier choisi). */
 data class BackupSettings(val folder: String? = null, val auto: Boolean = false, val last: Long? = null)
 
@@ -26,10 +16,8 @@ data class BackupFile(val createdAt: Long, val values: Map<String, Any>)
  */
 object Backup {
     const val VERSION = 1
-    /** Réglages propres à ce téléphone (sauvegarde, mises à jour) : ni sauvegardés ni restaurés. */
-    private val EXCLUDED_PREFIXES = listOf("backup_", "update_")
-
-    fun isExcluded(key: String): Boolean = EXCLUDED_PREFIXES.any(key::startsWith)
+    /** Réglages de la sauvegarde elle-même, propres à ce téléphone : ni sauvegardés ni restaurés. */
+    fun isExcluded(key: String): Boolean = key.startsWith("backup_")
     /** Sauvegardes automatiques gardées dans le dossier ; les plus anciennes sont effacées. */
     const val KEEP = 10
 

@@ -21,9 +21,6 @@ sealed interface NetResult {
 /** Décisions pures du point de sortie : HTTPS seulement, y compris après redirection. */
 object NetRules {
     const val MAX_BYTES = 1_000_000
-
-    /** APK d'une mise à jour de Lanceur. */
-    const val MAX_DOWNLOAD_BYTES = 50_000_000L
     const val MAX_REDIRECTS = 3
     const val TIMEOUT_MS = 10_000
 
@@ -39,28 +36,10 @@ object NetRules {
 
 /**
  * Seul endroit de Lanceur qui ouvre une connexion (vérifié par `NetworkGuardTest`). Utilisé uniquement par la météo,
- * le RSS, les Actualités et les mises à jour de Lanceur (la vue web des articles a son propre moteur, cf. `ArticleWebView`) ; aucun cookie ni identifiant n'est envoyé.
+ * le RSS et les Actualités (la vue web des articles a son propre moteur, cf. `ArticleWebView`) ; aucun cookie ni identifiant n'est envoyé.
  */
 class Network {
     suspend fun get(url: String): NetResult = withContext(Dispatchers.IO) { fetch(url) { NetResult.Ok(readLimited(it)) } }
-
-    /** Mise à jour de Lanceur : écrit la réponse dans [target] (au plus [NetRules.MAX_DOWNLOAD_BYTES]). */
-    suspend fun download(url: String, target: java.io.File): NetResult = withContext(Dispatchers.IO) {
-        fetch(url) { input ->
-            target.outputStream().use { out ->
-                val buffer = ByteArray(64 * 1024)
-                var total = 0L
-                while (true) {
-                    val read = input.read(buffer)
-                    if (read < 0) break
-                    total += read
-                    if (total > NetRules.MAX_DOWNLOAD_BYTES) throw IOException("Fichier trop gros")
-                    out.write(buffer, 0, read)
-                }
-            }
-            NetResult.Ok(ByteArray(0))
-        }
-    }
 
     private fun fetch(start: String, read: (InputStream) -> NetResult): NetResult {
         var current = start

@@ -11,7 +11,6 @@ import app.lanceur.apps.icons.IconPacks
 import app.lanceur.apps.icons.Wallpaper
 import app.lanceur.settings.AppearanceState
 import app.lanceur.settings.BackupState
-import app.lanceur.settings.UpdatesState
 import android.provider.AlarmClock
 import android.provider.Settings
 import android.widget.Toast
@@ -139,8 +138,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
     val authenticator = remember(activity) { Authenticator(activity) }
     val icon: @Composable (AppKey) -> Unit = { key -> AppIcon(key, container.iconLoader) }
     val roleWatcher = remember { HomeRoleWatcher { container.catalog.reload() } }
-    var canNotify by remember { mutableStateOf(container.updates.canNotify()) }
-    var canInstall by remember { mutableStateOf(container.updates.installer.canInstall()) }
+    val version = remember { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty() }
     var notificationAccess by remember { mutableStateOf(container.nowPlaying.hasAccess()) }
     var isDefault by remember { mutableStateOf(HomeRole.isHeld(context).also(roleWatcher::update)) }
     var permissionsGranted by remember { mutableStateOf(SearchPermissions.allGranted(context)) }
@@ -167,11 +165,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
         lockServiceEnabled = LockScreenService.isEnabled(context)
         widgetRefresh++
         reloadSummary()
-        canNotify = container.updates.canNotify()
-        canInstall = container.updates.installer.canInstall()
         notificationAccess = container.nowPlaying.hasAccess()
-        // Au plus toutes les 12 h, seulement si l'option est active
-        container.appScope.launch { container.updates.check() }
         onPauseOrDispose { }
     }
     fun quickToast(message: String) = android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
@@ -185,7 +179,6 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
         context.contentResolver.registerContentObserver(LockScreenService.SETTING_URI, false, observer)
         onDispose { context.contentResolver.unregisterContentObserver(observer) }
     }
-    val notifyLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { canNotify = it }
     val backupFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let { scope.launch { quickToast(if (container.backups.exportTo(it)) tr("Sauvegarde enregistrée", "Backup saved") else tr("Sauvegarde impossible", "Backup failed")) } }
     }
@@ -203,8 +196,6 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
             }
         }
     }
-    var checkingUpdates by remember { mutableStateOf(false) }
-    var installingUpdate by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         permissionsGranted = SearchPermissions.allGranted(context)
         searchVm.refresh()
@@ -593,7 +584,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
                 focusActive = lists.focusActive,
                 focusApps = lists.focusCandidates,
                 backup = BackupState(prefs.backup.auto, container.backups.folderName(prefs.backup.folder), prefs.backup.last),
-                updates = UpdatesState(container.updates.installed, prefs.updates.enabled, prefs.updates.latest, checkingUpdates, prefs.updates.lastCheck, canNotify, prefs.updates.autoInstall, canInstall, installingUpdate),
+                version = version,
                 now = newsNow,
                 notificationAccess = notificationAccess,
                 appearance = AppearanceState(
@@ -612,7 +603,6 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
                     setClockStyle = vm::setClockStyle,
                     setBadges = vm::setBadges,
                     grantNotificationAccess = builtinServices.grantMediaAccess,
-                    allowNotifications = { notifyLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS) },
                     backupNow = { backupFileLauncher.launch(app.lanceur.prefs.Backup.fileName(java.time.LocalDateTime.now())) },
                     restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
                     chooseBackupFolder = { folderLauncher.launch(null) },
@@ -620,32 +610,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
                         if (on && prefs.backup.folder == null) folderLauncher.launch(null)
                         else scope.launch { container.prefsRepo.setBackupAuto(on) }
                     },
-                    setUpdatesEnabled = { on ->
-                        scope.launch { container.prefsRepo.updateUpdates { it.copy(enabled = on) } }
-                        if (on && !canNotify) notifyLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                    },
-                    checkUpdatesNow = {
-                        checkingUpdates = true
-                        scope.launch {
-                            val newer = container.updates.check(force = true)
-                            checkingUpdates = false
-                            toast(newer?.let { tr("Lanceur ${it.version} est disponible", "Lanceur ${it.version} is available") } ?: tr("Lanceur est à jour", "Lanceur is up to date"))
-                        }
-                    },
-                    installUpdate = {
-                        installingUpdate = true
-                        scope.launch {
-                            if (!container.updates.installer.canInstall()) container.appLauncher.startSafely(container.updates.unknownSourcesIntent())
-                            else if (!container.updates.installNow()) quickToast(tr("Mise à jour impossible", "Update failed"))
-                            installingUpdate = false
-                        }
-                    },
-                    setAutoInstall = { on ->
-                        scope.launch { container.prefsRepo.updateUpdates { it.copy(autoInstall = on) } }
-                        if (on && !container.updates.installer.canInstall()) container.appLauncher.startSafely(container.updates.unknownSourcesIntent())
-                    },
-                    allowInstalls = { container.appLauncher.startSafely(container.updates.unknownSourcesIntent()) },
-                    openReleases = { builtinServices.openUrl(app.lanceur.update.UpdateCheck.RELEASES_PAGE) },
+                    openSource = { builtinServices.openUrl("https://github.com/KrakenAgite/lanceur") },
                     focus = app.lanceur.focus.FocusActions(
                         start = vm::startFocus,
                         stop = vm::stopFocus,

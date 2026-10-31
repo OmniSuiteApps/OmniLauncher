@@ -84,41 +84,21 @@ class SettingsActions(
     val focus: FocusActions = FocusActions(),
     val findIconPacks: () -> Unit = {},
     val grantNotificationAccess: () -> Unit = {},
-    val allowNotifications: () -> Unit = {},
     val backupNow: () -> Unit = {},
     val restoreBackup: () -> Unit = {},
     val chooseBackupFolder: () -> Unit = {},
     val setBackupAuto: (Boolean) -> Unit = {},
-    val setUpdatesEnabled: (Boolean) -> Unit = {},
-    val checkUpdatesNow: () -> Unit = {},
-    val openReleases: () -> Unit = {},
-    val installUpdate: () -> Unit = {},
-    val setAutoInstall: (Boolean) -> Unit = {},
-    val allowInstalls: () -> Unit = {},
+    val openSource: () -> Unit = {},
 )
 
 data class BackupState(val auto: Boolean = false, val folderName: String? = null, val last: Long? = null)
-
-data class UpdatesState(
-    val installed: String = "",
-    val enabled: Boolean = true,
-    val latest: String? = null,
-    val checking: Boolean = false,
-    val lastCheck: Long? = null,
-    val canNotify: Boolean = true,
-    val autoInstall: Boolean = true,
-    val canInstall: Boolean = true,
-    val installing: Boolean = false,
-)
 
 data class PermissionsState(
     val searchGranted: Boolean = true,
     val notificationAccess: Boolean = true,
     val lockService: Boolean = true,
-    val canNotify: Boolean = true,
-    val canInstall: Boolean = true,
 ) {
-    val missing: Int get() = listOf(searchGranted, notificationAccess, lockService, canNotify, canInstall).count { !it }
+    val missing: Int get() = listOf(searchGranted, notificationAccess, lockService).count { !it }
 }
 
 /** Sous-menus des réglages, dans l'ordre de la liste. */
@@ -156,13 +136,14 @@ fun SettingsScreen(
     focusApps: List<AppEntry> = emptyList(),
     notificationAccess: Boolean = true,
     backup: BackupState = BackupState(),
-    updates: UpdatesState = UpdatesState(),
+    /** Version installée, affichée dans « À propos ». */
+    version: String = "",
     now: Long = System.currentTimeMillis(),
     initialPage: SettingsPage? = null,
 ) {
     var page by remember { mutableStateOf(initialPage) }
     var choosingPack by remember { mutableStateOf(false) }
-    val permissions = PermissionsState(permissionsGranted, notificationAccess, lockServiceEnabled, updates.canNotify, updates.canInstall)
+    val permissions = PermissionsState(permissionsGranted, notificationAccess, lockServiceEnabled)
     BackHandler(enabled = page != null) { page = null }
 
     Column(
@@ -195,7 +176,7 @@ fun SettingsScreen(
             }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SettingsPage.entries.forEach { p ->
-                    MenuRow(p.icon, p.label, summary(p, side, favorites.size, appearance, pageOrder, widgetPageEnabled, newsEnabled, focus, focusActive, permissions, backup, updates, now), tag = "settings-${p.name}") {
+                    MenuRow(p.icon, p.label, summary(p, side, favorites.size, appearance, pageOrder, widgetPageEnabled, newsEnabled, focus, focusActive, permissions, backup, version, now), tag = "settings-${p.name}") {
                         page = p
                     }
                 }
@@ -250,21 +231,9 @@ fun SettingsScreen(
                         if (lockServiceEnabled) null else tr("Autoriser", "Allow"),
                         actions.enableLockService,
                     )
-                    SettingRow(
-                        tr("Envoyer des notifications", "Send notifications"),
-                        if (updates.canNotify) tr("Autorisé", "Allowed") else tr("Non autorisé", "Not allowed"),
-                        if (updates.canNotify) null else tr("Autoriser", "Allow"),
-                        actions.allowNotifications,
-                    )
-                    SettingRow(
-                        tr("Installer les mises à jour", "Install updates"),
-                        if (updates.canInstall) tr("Autorisé", "Allowed") else tr("Non autorisé", "Not allowed"),
-                        if (updates.canInstall) null else tr("Autoriser", "Allow"),
-                        actions.allowInstalls,
-                    )
                 }
                 SettingsPage.BACKUP -> BackupPage(backup, actions, now)
-                SettingsPage.ABOUT -> AboutPage(updates, actions, now)
+                SettingsPage.ABOUT -> AboutPage(version, actions)
             }
             }
         }
@@ -292,7 +261,7 @@ private fun summary(
     focusActive: Boolean,
     permissions: PermissionsState,
     backup: BackupState,
-    updates: UpdatesState,
+    version: String,
     now: Long,
 ): String = when (page) {
     SettingsPage.HOME -> listOf(
@@ -315,7 +284,7 @@ private fun summary(
         if (backup.auto && backup.folderName != null) tr("Automatique", "Automatic") else tr("Manuelle", "Manual"),
         backup.last?.let { Freshness.ago(it, now) } ?: tr("jamais", "never"),
     ).joinToString(" · ")
-    SettingsPage.ABOUT -> updates.latest?.let { tr("$it disponible", "$it available") } ?: tr("Version ", "Version ") + updates.installed
+    SettingsPage.ABOUT -> tr("Version ", "Version ") + version
 }
 
 @Composable
@@ -368,51 +337,9 @@ private fun BackupPage(backup: BackupState, actions: SettingsActions, now: Long)
 }
 
 @Composable
-private fun AboutPage(updates: UpdatesState, actions: SettingsActions, now: Long) {
-    SettingRow(
-        tr("Version", "Version"),
-        updates.installed + (updates.latest?.let { " · " + tr("$it disponible", "$it available") } ?: ""),
-        updates.latest?.let { if (updates.installing) tr("Installation…", "Installing…") else tr("Installer", "Install") },
-        actions.installUpdate,
-    )
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(tr("Vérifier les mises à jour", "Check for updates"), style = MaterialTheme.typography.titleMedium)
-            Text(
-                updates.lastCheck?.let { tr("Dernière vérification ", "Last checked ") + Freshness.ago(it, now) } ?: tr("Jamais vérifié", "Never checked"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Switch(checked = updates.enabled, onCheckedChange = actions.setUpdatesEnabled, modifier = Modifier.testTag("updates-enabled"))
-    }
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(tr("Installer automatiquement", "Install automatically"), style = MaterialTheme.typography.titleMedium)
-            Text(
-                if (updates.canInstall) tr("Dès qu'une version sort", "As soon as a version is out") else tr("Autorisation d'installer requise", "Install permission needed"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Switch(checked = updates.autoInstall, onCheckedChange = actions.setAutoInstall, modifier = Modifier.testTag("updates-auto-install"))
-    }
-    if (updates.autoInstall && !updates.canInstall) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HintText(tr("Lanceur n'a pas le droit d'installer.", "Lanceur can't install apps yet."))
-            androidx.compose.material3.TextButton(onClick = actions.allowInstalls) { Text(tr("Autoriser", "Allow")) }
-        }
-    }
-    FilledTonalButton(onClick = actions.checkUpdatesNow, enabled = !updates.checking, modifier = Modifier.fillMaxWidth().testTag("updates-check")) {
-        Text(if (updates.checking) tr("Vérification…", "Checking…") else tr("Vérifier maintenant", "Check now"))
-    }
-    if (updates.enabled && !updates.canNotify) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HintText(tr("Notifications bloquées pour Lanceur.", "Notifications are blocked for Lanceur."))
-            androidx.compose.material3.TextButton(onClick = actions.allowNotifications) { Text(tr("Autoriser", "Allow")) }
-        }
-    }
-    SettingRow(tr("Code source", "Source code"), "github.com/KrakenAgite/lanceur", tr("Ouvrir", "Open"), actions.openReleases)
+private fun AboutPage(version: String, actions: SettingsActions) {
+    SettingRow(tr("Version", "Version"), version, null) {}
+    SettingRow(tr("Code source", "Source code"), "github.com/KrakenAgite/lanceur", tr("Ouvrir", "Open"), actions.openSource)
 }
 
 @Composable

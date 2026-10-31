@@ -26,7 +26,7 @@ class SettingsMenuTest {
                 lockServiceEnabled = true, pageOrder = PageLayout.DEFAULT_ORDER, widgetPageEnabled = true, newsEnabled = false,
                 icon = {}, actions = actions,
                 backup = BackupState(auto = true, folderName = "Documents", last = now - 5 * 60_000),
-                updates = UpdatesState(installed = "1.4.0", latest = "1.5.0"),
+                version = "1.4.0",
                 now = now,
                 initialPage = page,
             )
@@ -71,14 +71,11 @@ class SettingsMenuTest {
     }
 
     @Test
-    fun about_page_shows_the_update_and_checks_on_demand() {
-        val calls = mutableListOf<String>()
-        show(SettingsActions(checkUpdatesNow = { calls += "check" }, installUpdate = { calls += "install" }, setUpdatesEnabled = { calls += "enabled=$it" }, setAutoInstall = { calls += "auto=$it" }), page = SettingsPage.ABOUT)
-        rule.onNodeWithText("1.4.0 · 1.5.0 disponible").assertIsDisplayed()
-        rule.onNodeWithText("Installer").performClick()
-        rule.onNodeWithTag("updates-check").performClick()
-        rule.onNodeWithTag("updates-enabled").performClick()
-        rule.onNodeWithTag("updates-auto-install").performClick()
-        assertEquals(listOf("install", "check", "enabled=false", "auto=false"), calls)
+    fun about_page_shows_the_version_and_opens_the_source() {
+        var opened = false
+        show(SettingsActions(openSource = { opened = true }), page = SettingsPage.ABOUT)
+        rule.onNodeWithText("1.4.0").assertIsDisplayed()
+        rule.onNodeWithText("Ouvrir").performClick()
+        assertTrue(opened)
     }
 }

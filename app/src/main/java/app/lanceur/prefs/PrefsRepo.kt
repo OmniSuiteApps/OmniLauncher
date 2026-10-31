@@ -102,8 +102,6 @@ class PrefsRepo(
     /** Transformation dans la transaction : une actualisation et un ajout de flux ne s'écrasent pas. */
     suspend fun updateNews(transform: (String?) -> String) = update { it.copy(news = transform(it.news)) }
 
-    suspend fun updateUpdates(transform: (UpdateSettings) -> UpdateSettings) = update { it.copy(updates = transform(it.updates)) }
-
     suspend fun setBackupFolder(folder: String?) = update { it.copy(backup = it.backup.copy(folder = folder)) }
 
     suspend fun setBackupAuto(auto: Boolean) = update { it.copy(backup = it.backup.copy(auto = auto)) }
@@ -225,11 +223,6 @@ class PrefsRepo(
         val SHOW_ICONS = booleanPreferencesKey("show_icons")
         val FOCUS = stringPreferencesKey("focus")
         val BACKUP_FOLDER = stringPreferencesKey("backup_folder")
-        val UPDATE_ENABLED = booleanPreferencesKey("update_enabled")
-        val UPDATE_LAST = androidx.datastore.preferences.core.longPreferencesKey("update_last")
-        val UPDATE_LATEST = stringPreferencesKey("update_latest")
-        val UPDATE_NOTIFIED = stringPreferencesKey("update_notified")
-        val UPDATE_AUTO_INSTALL = booleanPreferencesKey("update_auto_install")
         val BACKUP_AUTO = booleanPreferencesKey("backup_auto")
         val BACKUP_LAST = androidx.datastore.preferences.core.longPreferencesKey("backup_last")
         val LABEL_UPPERCASE = booleanPreferencesKey("label_uppercase")
@@ -249,7 +242,6 @@ class PrefsRepo(
             pageOrder = PageLayout.decode(stored[PAGE_ORDER]),
             news = stored[NEWS],
             focus = FocusMode.decode(stored[FOCUS]),
-            updates = UpdateSettings(stored[UPDATE_ENABLED] ?: true, stored[UPDATE_LAST], stored[UPDATE_LATEST], stored[UPDATE_NOTIFIED], stored[UPDATE_AUTO_INSTALL] ?: true),
             backup = BackupSettings(stored[BACKUP_FOLDER], stored[BACKUP_AUTO] ?: false, stored[BACKUP_LAST]),
             appLabelStyle = AppLabelStyle(stored[SHOW_ICONS] ?: true, stored[LABEL_UPPERCASE] ?: false),
             iconStyle = IconStyle(stored[ICON_PACK], IconShape.decode(stored[ICON_SHAPE]), stored[ICON_THEMED] ?: false),
@@ -284,11 +276,6 @@ class PrefsRepo(
             out[FOCUS] = prefs.focus.encode()
             prefs.backup.folder?.let { out[BACKUP_FOLDER] = it } ?: out.remove(BACKUP_FOLDER)
             out[BACKUP_AUTO] = prefs.backup.auto
-            out[UPDATE_ENABLED] = prefs.updates.enabled
-            out[UPDATE_AUTO_INSTALL] = prefs.updates.autoInstall
-            prefs.updates.lastCheck?.let { out[UPDATE_LAST] = it } ?: out.remove(UPDATE_LAST)
-            prefs.updates.latest?.let { out[UPDATE_LATEST] = it } ?: out.remove(UPDATE_LATEST)
-            prefs.updates.notified?.let { out[UPDATE_NOTIFIED] = it } ?: out.remove(UPDATE_NOTIFIED)
             prefs.backup.last?.let { out[BACKUP_LAST] = it } ?: out.remove(BACKUP_LAST)
             out[LABEL_UPPERCASE] = prefs.appLabelStyle.uppercase
             out[FOLDERS] = Folder.encodeAll(prefs.folders)
@@ -297,8 +284,8 @@ class PrefsRepo(
             out[CLOCK] = prefs.clock.encode()
             out[BADGES] = prefs.badges
             out[WIDGETS] = prefs.widgets.joinToString("\n") { it.encode() }
-            // Les données d'un widget retiré disparaissent avec lui
-            out.asMap().keys.filter { it.name.startsWith(DATA_PREFIX) }.toList().forEach { out.remove(it) }
+            // Les données d'un widget retiré disparaissent avec lui ; celles des mises à jour (retirées) aussi
+            out.asMap().keys.filter { it.name.startsWith(DATA_PREFIX) || it.name.startsWith("update_") }.toList().forEach { out.remove(it) }
             prefs.widgetData.forEach { (id, text) -> out[stringPreferencesKey(DATA_PREFIX + id)] = text }
         }
     }

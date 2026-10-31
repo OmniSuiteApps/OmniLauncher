@@ -45,7 +45,7 @@ class BackupTest {
         repo.setAlphabetSide(AlphabetSide.LEFT)
         repo.setBackupFolder("content://dossier")
         val snapshot = repo.snapshot()
-        assertTrue(snapshot.keys.none { it.startsWith("backup_") || it.startsWith("update_") })
+        assertTrue(snapshot.keys.none { it.startsWith("backup_") })
 
         repo.setNewsEnabled(false)
         repo.setAlphabetSide(AlphabetSide.RIGHT)
