@@ -610,7 +610,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
                         if (on && prefs.backup.folder == null) folderLauncher.launch(null)
                         else scope.launch { container.prefsRepo.setBackupAuto(on) }
                     },
-                    openSource = { builtinServices.openUrl("https://github.com/OmniSuiteApps/lanceur") },
+                    openSource = { builtinServices.openUrl("https://github.com/OmniSuiteApps/OmniLauncher") },
                     focus = app.lanceur.focus.FocusActions(
                         start = vm::startFocus,
                         stop = vm::stopFocus,
