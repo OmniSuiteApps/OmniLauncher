@@ -703,8 +703,7 @@ fun AppRoot(vm: LauncherViewModel, searchVm: SearchViewModel, container: AppCont
                     androidx.compose.material3.Button(onClick = {
                         pendingRestore = null
                         scope.launch {
-                            container.backups.restore(backup)
-                            toast(tr("Réglages restaurés", "Settings restored"))
+                            toast(if (container.backups.restore(backup)) tr("Réglages restaurés", "Settings restored") else tr("Restauration impossible", "Restore failed"))
                         }
                     }) { Text(tr("Restaurer", "Restore")) }
                 },

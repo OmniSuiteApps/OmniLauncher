@@ -13,6 +13,8 @@ import app.lanceur.net.NetResult
 import app.lanceur.net.Network
 import app.lanceur.prefs.PrefsRepo
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Regarde sur GitHub s'il existe une version plus récente de Lanceur (au plus toutes les 12 h, quand on revient sur
@@ -22,17 +24,32 @@ class UpdateChecker(context: Context, private val network: Network, private val 
     private val appContext = context.applicationContext
     val installer = UpdateInstaller(appContext, network)
 
+    /**
+     * Une seule vérification ou installation à la fois : sinon deux retours rapides sur l'accueil téléchargent dans le
+     * même fichier. La vérification de fond saute son tour ; un bouton attend la fin de celle en cours.
+     */
+    private val busy = Mutex()
+
     val installed: String =
         runCatching { appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionName }.getOrNull().orEmpty()
 
     /** Bouton « Installer » : télécharge et installe tout de suite. */
-    suspend fun installNow(): Boolean {
+    suspend fun installNow(): Boolean = busy.withLock {
         val release = (network.get(UpdateCheck.LATEST_URL) as? NetResult.Ok)?.let { UpdateCheck.parse(it.text()) } ?: return false
-        return UpdateCheck.isNewer(release.version, installed) && installer.install(release)
+        UpdateCheck.isNewer(release.version, installed) && installer.install(release)
     }
 
     /** [force] : bouton « Vérifier maintenant ». Renvoie la release plus récente, s'il y en a une. */
     suspend fun check(force: Boolean = false): Release? {
+        if (force) busy.lock() else if (!busy.tryLock()) return null
+        try {
+            return checkLatest(force)
+        } finally {
+            busy.unlock()
+        }
+    }
+
+    private suspend fun checkLatest(force: Boolean): Release? {
         val settings = prefs.readOrNull()?.updates ?: return null
         if (!force && (!settings.enabled || !UpdateCheck.isDue(settings.lastCheck, System.currentTimeMillis()))) return null
         val release = (network.get(UpdateCheck.LATEST_URL) as? NetResult.Ok)?.let { UpdateCheck.parse(it.text()) }

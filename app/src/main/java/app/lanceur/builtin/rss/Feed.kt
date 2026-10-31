@@ -41,9 +41,14 @@ object Feed {
         }
     }.getOrNull()
 
+    /**
+     * Tout le fichier est lu (1 Mo au plus) : une DTD peut venir après de longs commentaires. Un octet nul signale
+     * l'UTF-16 (ou l'UTF-32), où ce texte ne se lit pas octet par octet : refusé aussi.
+     */
     private fun declaresEntities(bytes: ByteArray): Boolean {
-        val head = String(bytes, 0, minOf(bytes.size, 4096), Charsets.ISO_8859_1)
-        return head.contains("<!DOCTYPE", ignoreCase = true) || head.contains("<!ENTITY", ignoreCase = true)
+        if (bytes.any { it == 0.toByte() }) return true
+        val text = String(bytes, Charsets.ISO_8859_1)
+        return text.contains("<!DOCTYPE", ignoreCase = true) || text.contains("<!ENTITY", ignoreCase = true)
     }
 
     /** Seuls les liens web s'ouvrent : un flux ne doit pas pouvoir lancer `tel:`, `file:` ou une autre appli. */

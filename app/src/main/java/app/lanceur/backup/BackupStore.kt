@@ -39,7 +39,7 @@ class BackupStore(context: Context, private val prefs: PrefsRepo) {
         runCatching { resolver.openInputStream(file)!!.use { Backup.decode(it.readBytes().toString(Charsets.UTF_8)) } }.getOrNull()
     }
 
-    suspend fun restore(backup: BackupFile) = prefs.restore(backup.values)
+    suspend fun restore(backup: BackupFile): Boolean = prefs.restore(backup.values)
 
     /** Sauvegarde automatique : un nouveau fichier daté dans le dossier, puis seuls les [Backup.KEEP] plus récents restent. */
     suspend fun writeToFolder(folder: String): Boolean = withContext(Dispatchers.IO) {

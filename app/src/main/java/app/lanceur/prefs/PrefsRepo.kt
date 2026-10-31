@@ -114,9 +114,9 @@ class PrefsRepo(
     suspend fun snapshot(): Map<String, Any> =
         store.data.first().asMap().mapKeys { it.key.name }.filterKeys { !Backup.isExcluded(it) }
 
-    /** Remplace tous les réglages par [values] (les réglages de la sauvegarde restent tels quels). */
-    suspend fun restore(values: Map<String, Any>) {
-        try {
+    /** Remplace tous les réglages par [values] (les réglages de la sauvegarde restent tels quels). `false` si l'écriture a échoué. */
+    suspend fun restore(values: Map<String, Any>): Boolean {
+        return try {
             store.edit { out ->
                 out.asMap().keys.filterNot { Backup.isExcluded(it.name) }.toList().forEach { out.remove(it) }
                 values.filterKeys { !Backup.isExcluded(it) }.forEach { (name, value) ->
@@ -132,8 +132,10 @@ class PrefsRepo(
                     }
                 }
             }
+            true
         } catch (e: IOException) {
             onError(e)
+            false
         }
     }
 

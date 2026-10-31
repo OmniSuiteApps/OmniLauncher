@@ -98,6 +98,14 @@ class FeedTest {
     }
 
     @Test
+    fun a_dtd_hidden_after_long_comments_or_in_utf16_is_refused_too() {
+        val padded = "<?xml version=\"1.0\"?><!--" + "x".repeat(5000) + "--><!DOCTYPE rss [<!ENTITY lol \"lol\">]><rss><channel><title>&lol;</title></channel></rss>"
+        assertNull(Feed.parse(padded.toByteArray(), "x"))
+        val utf16 = "<!DOCTYPE rss [<!ENTITY lol \"lol\">]><rss><channel><title>&lol;</title></channel></rss>"
+        assertNull(Feed.parse(utf16.toByteArray(Charsets.UTF_16), "x"))
+    }
+
+    @Test
     fun huge_numeric_entity_does_not_drop_the_feed() {
         assertEquals("a b", Feed.clean("a &#99999999; b"))
         assertEquals("ab", Feed.clean("a\u001Fb"))

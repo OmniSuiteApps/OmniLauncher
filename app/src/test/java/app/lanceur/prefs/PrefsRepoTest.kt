@@ -278,4 +278,15 @@ class PrefsRepoTest {
         repo.setFolderOrder(id, listOf(agenda.key, chrome.key, app("Inconnue").key))
         assertEquals(listOf(agenda.key, chrome.key, banque.key), repo.prefs.first().folders.single().apps)
     }
+    @Test
+    fun a_failed_restore_says_so() = runTest {
+        val broken = object : androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences> {
+            override val data = kotlinx.coroutines.flow.flowOf(androidx.datastore.preferences.core.emptyPreferences())
+            override suspend fun updateData(
+                transform: suspend (t: androidx.datastore.preferences.core.Preferences) -> androidx.datastore.preferences.core.Preferences,
+            ): androidx.datastore.preferences.core.Preferences = throw java.io.IOException("disque plein")
+        }
+        assertFalse(PrefsRepo(broken).restore(mapOf("badges" to false)))
+        assertTrue(PrefsRepo(store()).restore(mapOf("badges" to false)))
+    }
 }

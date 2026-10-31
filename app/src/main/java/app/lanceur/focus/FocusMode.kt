@@ -122,9 +122,13 @@ data class FocusMode(
     }
 }
 
-/** Pendant la concentration, les notifications des applis masquées attendent (rien n'est supprimé). */
+/**
+ * Pendant la concentration, les notifications des applis masquées attendent (rien n'est supprimé). Android ne permet
+ * pas de lever une mise en attente : elle dure au plus [SNOOZE_MS], puis recommence tant que la concentration dure.
+ * Arrêter la concentration les fait donc revenir en quelques minutes.
+ */
 object FocusNotifications {
-    private const val MANUAL_SNOOZE_MS = 60 * 60_000L
+    const val SNOOZE_MS = 5 * 60_000L
     private val NEVER = setOf("call", "alarm")
 
     /**
@@ -149,7 +153,7 @@ object FocusNotifications {
             FocusFilter.SHOW_ONLY -> key !in focus.apps
         }
         if (!hidden) return null
-        val until = focus.activeUntil(now) ?: return MANUAL_SNOOZE_MS
-        return java.time.Duration.between(now, until).toMillis().coerceAtLeast(60_000L)
+        val until = focus.activeUntil(now) ?: return SNOOZE_MS
+        return java.time.Duration.between(now, until).toMillis().coerceIn(60_000L, SNOOZE_MS)
     }
 }
