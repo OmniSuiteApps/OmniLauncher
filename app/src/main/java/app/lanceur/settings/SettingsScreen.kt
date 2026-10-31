@@ -339,7 +339,7 @@ private fun BackupPage(backup: BackupState, actions: SettingsActions, now: Long)
 @Composable
 private fun AboutPage(version: String, actions: SettingsActions) {
     SettingRow(tr("Version", "Version"), version, null) {}
-    SettingRow(tr("Code source", "Source code"), "github.com/KrakenAgite/lanceur", tr("Ouvrir", "Open"), actions.openSource)
+    SettingRow(tr("Code source", "Source code"), "github.com/OmniSuiteApps/lanceur", tr("Ouvrir", "Open"), actions.openSource)
 }
 
 @Composable
