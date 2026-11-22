@@ -7,6 +7,7 @@ import android.content.pm.LauncherApps
 import android.content.res.Configuration
 import android.graphics.drawable.BitmapDrawable
 import android.os.Process
+import android.os.UserHandle
 import android.os.UserManager
 import android.util.LruCache
 import androidx.compose.runtime.getValue
@@ -64,6 +65,7 @@ class IconLoader(context: Context) {
     suspend fun load(key: AppKey, sizePx: Int): ImageBitmap? = cache.get(key) ?: withContext(Dispatchers.IO) {
         runCatching {
             val user = userManager.getUserForSerialNumber(key.userSerial) ?: return@runCatching null
+            if (key.isPinned) return@runCatching pinnedIcon(key, user, sizePx)
             val intent = Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_LAUNCHER)
                 .setComponent(ComponentName(key.packageName, key.className))
@@ -80,6 +82,23 @@ class IconLoader(context: Context) {
             else appContext.packageManager.getUserBadgedIcon(BitmapDrawable(appContext.resources, bitmap), user).toBitmap(sizePx, sizePx)
             badged.asImageBitmap()
         }.getOrNull()?.also { cache.put(key, it) }
+    }
+
+    /** Icône d'une PWA épinglée, à la forme choisie (pas de pack : il ne connaît pas les sites). */
+    private fun pinnedIcon(key: AppKey, user: UserHandle, sizePx: Int): ImageBitmap? {
+        val query = LauncherApps.ShortcutQuery().setPackage(key.packageName).setShortcutIds(listOf(key.shortcutId))
+            .setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
+        val info = launcherApps.getShortcuts(query, user)?.firstOrNull() ?: return null
+        val density = appContext.resources.displayMetrics.densityDpi
+        val current = style
+        if (current.shape == IconShape.SYSTEM && !current.themed) {
+            return launcherApps.getShortcutBadgedIconDrawable(info, density)?.toBitmap(sizePx, sizePx)?.asImageBitmap()
+        }
+        val icon = launcherApps.getShortcutIconDrawable(info, density) ?: return null
+        val bitmap = IconRenderer.render(icon, current.shape, if (current.themed) themedColors() else null, sizePx)
+        val badged = if (user == Process.myUserHandle()) bitmap
+        else appContext.packageManager.getUserBadgedIcon(BitmapDrawable(appContext.resources, bitmap), user).toBitmap(sizePx, sizePx)
+        return badged.asImageBitmap()
     }
 
     /** Comme les icônes thématisées du Pixel : teintes claires le jour, sombres la nuit. */

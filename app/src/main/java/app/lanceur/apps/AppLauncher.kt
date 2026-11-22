@@ -20,7 +20,8 @@ class AppLauncher(private val context: Context) {
     /** `false` si l'appli n'existe plus ou ne peut pas être lancée. */
     fun launch(key: AppKey): Boolean = runCatching {
         val user = userManager.getUserForSerialNumber(key.userSerial) ?: return false
-        launcherApps.startMainActivity(key.component(), user, null, null)
+        if (key.isPinned) launcherApps.startShortcut(key.packageName, key.shortcutId, null, null, user)
+        else launcherApps.startMainActivity(key.component(), user, null, null)
     }.onFailure { Log.w(TAG, "Lancement impossible : ${key.encode()}", it) }.isSuccess
 
     fun openAppInfo(key: AppKey) {
@@ -31,7 +32,17 @@ class AppLauncher(private val context: Context) {
     }
 
     fun uninstall(key: AppKey) {
-        uninstallIntent(key)?.let(::startSafely)
+        if (key.isPinned) unpin(key) else uninstallIntent(key)?.let(::startSafely)
+    }
+
+    /** Retire une PWA épinglée sans toucher au navigateur qui l'a créée. */
+    private fun unpin(key: AppKey) {
+        runCatching {
+            val user = userManager.getUserForSerialNumber(key.userSerial) ?: return
+            val query = LauncherApps.ShortcutQuery().setPackage(key.packageName).setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
+            val kept = launcherApps.getShortcuts(query, user).orEmpty().map { it.id }.filter { it != key.shortcutId }
+            launcherApps.pinShortcuts(key.packageName, kept, user)
+        }.onFailure { Log.w(TAG, "Impossible de retirer ${key.encode()}", it) }
     }
 
     /** Désinstalle la copie du bon profil (perso, pro…), pas forcément celle du profil principal. */

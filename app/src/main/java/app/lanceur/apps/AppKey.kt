@@ -4,7 +4,15 @@ package app.lanceur.apps
 data class AppKey(val packageName: String, val className: String, val userSerial: Long) {
     fun encode(): String = "$packageName/$className#$userSerial"
 
+    /** Raccourci épinglé (PWA ajoutée depuis un navigateur) plutôt qu'une activité. */
+    val isPinned: Boolean get() = className.startsWith(PINNED)
+    val shortcutId: String get() = className.removePrefix(PINNED)
+
     companion object {
+        private const val PINNED = "pinned:"
+
+        fun pinned(packageName: String, shortcutId: String, userSerial: Long) = AppKey(packageName, PINNED + shortcutId, userSerial)
+
         fun decode(value: String): AppKey? {
             val slash = value.indexOf('/')
             val hash = value.lastIndexOf('#')

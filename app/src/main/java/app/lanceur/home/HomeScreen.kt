@@ -412,6 +412,7 @@ private fun menuFor(entry: AppEntry, favorites: Set<AppKey>, inFolder: Boolean, 
     AppMenuAction.RENAME,
     if (paused) AppMenuAction.UNPAUSE else AppMenuAction.PAUSE,
     AppMenuAction.HIDE,
-    AppMenuAction.INFO,
+    // Les infos d'une PWA épinglée seraient celles du navigateur
+    if (entry.key.isPinned) null else AppMenuAction.INFO,
     AppMenuAction.UNINSTALL,
 )

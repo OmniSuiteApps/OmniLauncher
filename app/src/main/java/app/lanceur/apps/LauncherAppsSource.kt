@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.LauncherApps
+import android.content.pm.ShortcutInfo
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
@@ -26,6 +27,8 @@ class LauncherAppsSource(private val context: Context) : CatalogSource {
                 override fun onPackageChanged(packageName: String, user: UserHandle) = onChange(packageName)
                 override fun onPackagesAvailable(packageNames: Array<out String>, user: UserHandle, replacing: Boolean) = onChange(null)
                 override fun onPackagesUnavailable(packageNames: Array<out String>, user: UserHandle, replacing: Boolean) = onChange(null)
+                // PWA épinglée ou retirée
+                override fun onShortcutsChanged(packageName: String, shortcuts: MutableList<ShortcutInfo>, user: UserHandle) = onChange(packageName)
             },
             Handler(Looper.getMainLooper()),
         )
@@ -55,9 +58,18 @@ class LauncherAppsSource(private val context: Context) : CatalogSource {
             launcherApps.getActivityList(null, user).map { info ->
                 val component = info.componentName
                 AppEntry(AppKey(component.packageName, component.className, serial), info.label.toString(), isPrivateSpace = false)
-            }
+            } + pinned(user, serial)
         }
         ProfileSnapshot(kind, quiet, apps)
+    }
+
+    /** Raccourcis épinglés sur OmniLauncher (PWA de Firefox, Brave…) ; rien sans le rôle d'écran d'accueil. */
+    private fun pinned(user: UserHandle, serial: Long): List<AppEntry> {
+        if (!launcherApps.hasShortcutHostPermission()) return emptyList()
+        val query = LauncherApps.ShortcutQuery().setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
+        return launcherApps.getShortcuts(query, user).orEmpty()
+            .filter { it.isEnabled }
+            .map { AppEntry(AppKey.pinned(it.`package`, it.id, serial), (it.shortLabel ?: it.longLabel ?: it.id).toString(), isPrivateSpace = false) }
     }
 
     override fun setPrivateSpaceLocked(locked: Boolean): Boolean {
